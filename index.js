@@ -10,9 +10,10 @@ const port = process.env.PORT || 3000
 async function mergeFeeds(feedUrls, feedName) {
 	let feeds = []
 	if (Array.isArray(feedUrls)) {
-		for (let url of feedUrls) {
+		let promises = feedUrls.map(url => parser.parseURL(url))
+		let results = await Promise.all(promises)
+		for (let feed of results) {
 			try {
-				let feed = await parser.parseURL(url)
 				feeds = feeds.concat(
 					feed.items.map(item => {
 						item.title = `${feed.title} | ${item.title}`

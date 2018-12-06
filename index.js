@@ -26,14 +26,19 @@ async function startFeedCollecter(title, feedLink, feedUrls) {
 	if (Array.isArray(feedUrls)) {
 		let promises = feedUrls.map(url => () =>
 			parser.parseURL(url).then(feed =>
-				feed.items.map(item => {
-					item.title = `${feed.title} | ${item.title}`
-					return item
-				})
+				feed.items
+					.map(item => {
+						item.title = `${feed.title} | ${item.title}`
+						return item
+					})
+					.sort(rssSorter)
+					.slice(0, 10)
 			)
 		)
-		let sortedFeeds = [].concat(...(await queue(promises, 4))).sort(rssSorter)
-		sortedFeeds.length = 50
+		let sortedFeeds = []
+			.concat(...(await queue(promises, 4)))
+			.sort(rssSorter)
+			.slice(0, 50)
 		let rss = new Feed({
 			title: name,
 			copyright: 'DarkSky',
@@ -58,7 +63,7 @@ async function startFeedCollecter(title, feedLink, feedUrls) {
 feeds.forEach(({ name, link, content }) => {
 	startFeedCollecter(name, link, content)
 	app.get(`/${link}`, (req, res) => {
-		return res.send(feedContent[link])
+		return res.send(feedContent[link] || '')
 	})
 })
 

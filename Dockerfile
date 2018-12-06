@@ -9,7 +9,7 @@ WORKDIR /usr/src/app
 ENV NODE_ENV=production PORT=3000
 EXPOSE 3000
 COPY --from=builder /usr/src/app/node_modules node_modules
-COPY --from=builder /usr/src/app/*.js .
+COPY --from=builder /usr/src/app/*.js ./
 COPY --from=builder /usr/src/app/package.json .
 VOLUME /usr/src/app
 CMD node index.js

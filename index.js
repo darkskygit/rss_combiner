@@ -32,7 +32,7 @@ async function startFeedCollecter(title, feedLink, feedUrls) {
 				})
 			)
 		)
-		let sortedFeeds = [].concat(await queue(promises, 4)).sort(rssSorter)
+		let sortedFeeds = [].concat(...(await queue(promises, 4))).sort(rssSorter)
 		sortedFeeds.length = 50
 		let rss = new Feed({
 			title: name,
@@ -44,9 +44,9 @@ async function startFeedCollecter(title, feedLink, feedUrls) {
 				rss.addItem({
 					title,
 					link: item.link,
-					date: new Date(item.isoDate),
+					date: new Date(getDataNum(item.isoDate)),
 					// content: item.content,
-					published: new Date(item.pubDate)
+					published: new Date(getDataNum(item.pubDate))
 				})
 			}
 		})

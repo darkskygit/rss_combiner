@@ -11,7 +11,7 @@ const timeout = process.env.TIMEOUT || 3 * 60 * 1000
 const feedContent = {}
 
 function getDataNum(date) {
-	return Number(new Date(date)) | 0
+	return Number(new Date(date)) || 0
 }
 
 function getRssDate({ isoDate, pubDate }) {
@@ -32,22 +32,18 @@ async function startFeedCollecter(title, feedLink, feedUrls) {
 						return item
 					})
 					.sort(rssSorter)
-					.slice(0, 10)
 			)
 		)
-		let sortedFeeds = []
-			.concat(...(await queue(promises, 4)))
-			.sort(rssSorter)
-			.slice(0, 50)
+		let sortedFeeds = [].concat(...(await queue(promises, 4))).sort(rssSorter)
 		let rss = new Feed({
-			title: name,
+			title,
 			copyright: 'DarkSky',
-			updated: getRssDate(sortedFeeds[0])
+			updated: new Date(getRssDate(sortedFeeds[0]))
 		})
 		sortedFeeds.forEach(item => {
 			if (typeof item === 'object' && Object.keys(item).length > 0) {
 				rss.addItem({
-					title,
+					title: item.title,
 					link: item.link,
 					date: new Date(getDataNum(item.isoDate)),
 					// content: item.content,

@@ -10,6 +10,18 @@ const port = process.env.PORT || 3000
 const timeout = process.env.TIMEOUT || 3 * 60 * 1000
 const feedContent = {}
 
+function getDataNum(date) {
+	return Number(new Date(date)) | 0
+}
+
+function getRssDate({ isoDate, pubDate }) {
+	return getDataNum(isoDate) || getDataNum(pubDate) || Date.now()
+}
+
+function rssSorter(a, b) {
+	return getRssDate(b) - getRssDate(a)
+}
+
 async function startFeedCollecter(title, feedLink, feedUrls) {
 	if (Array.isArray(feedUrls)) {
 		let promises = feedUrls.map(url => () =>
@@ -20,23 +32,23 @@ async function startFeedCollecter(title, feedLink, feedUrls) {
 				})
 			)
 		)
-		let sortedFeeds = [].concat(await queue(promises, 4)).sort((a, b) => {
-			let getDataNum = date => Number(new Date(date)) | 0
-			return getDataNum(b.isoDate) - getDataNum(a.isoDate)
-		})
+		let sortedFeeds = [].concat(await queue(promises, 4)).sort(rssSorter)
+		sortedFeeds.length = 50
 		let rss = new Feed({
 			title: name,
 			copyright: 'DarkSky',
-			updated: new Date(sortedFeeds[0].isoDate)
+			updated: getRssDate(sortedFeeds[0])
 		})
 		sortedFeeds.forEach(item => {
-			rss.addItem({
-				title,
-				link: item.link,
-				date: new Date(item.isoDate),
-				content: item.content,
-				published: new Date(item.pubDate)
-			})
+			if (typeof item === 'object' && Object.keys(item).length > 0) {
+				rss.addItem({
+					title,
+					link: item.link,
+					date: new Date(item.isoDate),
+					// content: item.content,
+					published: new Date(item.pubDate)
+				})
+			}
 		})
 		feedContent[feedLink] = rss.rss2()
 		return setTimeout(() => startFeedCollecter(...arguments, timeout), timeout)
